@@ -22,10 +22,6 @@ const config = {
     },
     devtool: "source-map",
     resolve: {
-         // 文件路径优化
-         alias: {
-            react: path.join(__dirname, "src/React"),
-        },
         extensions: [".js", ".jsx"]
     }
 }
