@@ -5,7 +5,7 @@ function log(target) {
     // 拿到当前类的原型上的所有属性
     const desc = Object.getOwnPropertyDescriptors(target.prototype)
 
-    console.log('log====>',target, key, descriptor);
+    console.log('log====>',target);
     console.log("desc====>", desc);
 
 
@@ -64,4 +64,5 @@ class Numberic {
 }
 
 // new Numberic().PI=120;
-new Numberic().add(1, 3,"a");
+// new Numberic().add(1, 3,"a");
+new Numberic().add(1, 3);
