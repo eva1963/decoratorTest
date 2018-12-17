@@ -1,31 +1,67 @@
-function handleApiError(target, propertyKey, descriptor) {
-    const func = descriptor.value;
 
-    console.log(111, target, propertyKey, descriptor);
-    return {
-        /* 每次调用handleApiError，都要走一次get */
-        get() {
-            return (...args) => {
-                /* args就是store调取被修饰的方法时的实参 */
-                return Promise.resolve(func.apply(this, args)).catch(e => { console.log(e); });
-            };
-        },
-        /* 每一次设置，都要冲更新，不过不懂这里需要设置什么，设置到哪里去了 */
-        set(newValue) {
-            return newValue;
+function log(target) {
+    /* 装饰类，不存在 key, descriptor */
+
+    // 拿到当前类的原型上的所有属性
+    const desc = Object.getOwnPropertyDescriptors(target.prototype)
+
+    console.log('log====>', target);
+    console.log("desc====>", desc);
+
+    // 划重点啦
+    for (const key of Object.keys(desc)) {
+        if (key === "constructor") {
+            continue;
         }
-    };
-}
 
+        const func = desc[key].value;
+        if ("function" === typeof func) {
+            Object.defineProperty(target.prototype, key, {
+                value(...args) {
+                    console.log("before" + key);
+                    const ret = func.apply(this, args);
+                    console.log("after" + key);
 
-class A {
-    /* 此处方法用来调取API，获得数据，我们使用handleApiError装饰器，就避免了每次重复调取失败的操作 */
-    @handleApiError
-    fetchList(page) {
-        list(3333);//list是一个调取接口的方法，这里仅做模拟
+                    return ret;
+                }
+            })
+        }
     }
 }
-function list(a) {console.log(a)}
 
-/* 此处模拟我们在tsx文件中，通过this.store.fetchList(1)的方式调取第一页的数据 */
-new A().fetchList(888);
+function readonly(target, key, description) {
+    console.log('readonly====>', target, key, description);
+
+    description.writable = false;
+}
+
+function valudate(target, key, descriptor) {
+
+    console.log('valudate====>', target, key, descriptor);
+    const func = descriptor.value;
+
+    descriptor.value = function (...args) {
+        for (let num of args) {
+            if ("number" !== typeof num) {
+                throw new Error(`${num} is not a number`);
+            }
+        }
+        return func.apply(this.args);
+    }
+}
+
+@log
+class Numberic {
+    @readonly 
+    PI = 3.1413526;
+
+    @valudate
+    add(...nums) {
+        return nums.reduce((p, n) => (p + n), 0)
+    }
+
+}
+
+// new Numberic().PI=120;
+// new Numberic().add(1, 3,"a");
+new Numberic().add(1, 3);
